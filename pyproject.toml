@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nav-sim-modules"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["Reona Sato <www.shinderu.www@gmail.com>"]
 
