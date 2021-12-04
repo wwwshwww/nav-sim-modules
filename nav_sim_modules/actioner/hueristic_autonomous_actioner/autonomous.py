@@ -1,7 +1,7 @@
 from typing import Tuple
 import numpy as np
-from nav_components.mapping import Mapper
-from nav_components.planning import Planner
+from ...nav_components.mapping import Mapper
+from ...nav_components.planning import Planner
 
 from ... import MAP_UNK_VAL, MAP_OBS_VAL, MAP_PASS_VAL, PASSABLE_COLOR, RESOLUTION
 

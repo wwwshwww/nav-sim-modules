@@ -1,5 +1,4 @@
 from typing import Tuple, List
-import gym.spaces
 
 class Actioner():
     def __init__(self) -> None:

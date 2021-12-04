@@ -4,8 +4,6 @@ from .autonomous import HueristicNavigationStack
 
 from ... import RESOLUTION, MAP_UNK_VAL, MAP_PASS_VAL, MAP_OBS_VAL
 
-from gym import spaces
-
 class HeuristicLocalAutonomousActioner(Actioner):
     '''
     randoor から得られる地図画像の回転がちょっとおかしいので要修正。現状こっちは使わないほうがいい。
