@@ -6,9 +6,6 @@ from .autonomous import HueristicNavigationStack
 from ... import RESOLUTION, MAP_UNK_VAL, MAP_PASS_VAL, MAP_OBS_VAL
 
 class HeuristicLocalAutonomousActioner(Actioner):
-    '''
-    randoor から得られる地図画像の回転がちょっとおかしいので要修正。現状こっちは使わないほうがいい。
-    '''
     def __init__(self, resolution=RESOLUTION) -> None:
         super().__init__(resolution)
         self.navs: HueristicNavigationStack = None

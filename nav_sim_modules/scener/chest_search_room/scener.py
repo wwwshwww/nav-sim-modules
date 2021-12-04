@@ -45,7 +45,7 @@ class ChestSearchRoomScener(Scener):
             pass_color=self.map_pass_val, 
             obs_color=self.map_obs_val
         ).astype(np.int32)
-        return pix.reshape([self.env_size, self.env_size])
+        return pix.reshape([self.env_size, self.env_size]).T
 
     def spawn(self) -> Tuple[float, float, float]:
         '''
@@ -70,7 +70,7 @@ class ChestSearchRoomScener(Scener):
             pass_color=self.map_pass_val, 
             obs_color=self.map_obs_val,
         ).astype(np.int32)
-        return (xy[0], xy[1], yaw), occ_map.reshape([self.env_size, self.env_size])
+        return (xy[0], xy[1], yaw), occ_map.reshape([self.env_size, self.env_size]).T
 
     def generate_scene(self, 
                         obstacle_count=10,
