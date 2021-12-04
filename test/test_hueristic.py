@@ -1,5 +1,5 @@
-from hueristic_autonomous_actioner.autonomous import HueristicNavigationStack
-from hueristic_autonomous_actioner.utils import rgb2int
+from nav_sim_modules.actioner.hueristic_autonomous_actioner.autonomous import HueristicNavigationStack
+from nav_sim_modules.utils import rgb2int
 
 import numpy as np
 import pygame

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-from cy_module import planning_cy
+from nav_sim_modules.nav_components import planning
 
 width, height = 100, 100
 obs_color = 100
@@ -19,7 +19,7 @@ goal = (10,80, 0)
 # start = (80,10,np.pi/2)
 # goal = (50,80,np.pi)
 
-planner = planning_cy.Planner(world, np.pi/8, avoidance_size=2, exp_max=20000)
+planner = planning.Planner(world, np.pi/8, avoidance_size=2, exp_max=20000)
 start1 = time.time()
 path = planner.get_path(start, goal)
 start2 = time.time()

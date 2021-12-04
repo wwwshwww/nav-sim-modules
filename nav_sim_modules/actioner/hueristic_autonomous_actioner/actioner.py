@@ -1,4 +1,5 @@
 from typing import Tuple
+import numpy as np
 from ..actioner import Actioner
 from .autonomous import HueristicNavigationStack
 
@@ -9,10 +10,9 @@ class HeuristicLocalAutonomousActioner(Actioner):
     randoor から得られる地図画像の回転がちょっとおかしいので要修正。現状こっちは使わないほうがいい。
     '''
     def __init__(self, resolution=RESOLUTION) -> None:
-        super().__init__()
-        self.resolution = resolution
-        self.navs = None
-        self.occupancy_map = None
+        super().__init__(resolution)
+        self.navs: HueristicNavigationStack = None
+        self.occupancy_map: np.ndarray = None
     
     def initialize(self, env_pixel, global_pose) -> None:
         '''
@@ -37,8 +37,8 @@ class HeuristicAutonomousActioner(Actioner):
     def __init__(self, resolution=RESOLUTION) -> None:
         super().__init__()
         self.resolution = resolution
-        self.navs = None
-        self.occupancy_map = None
+        self.navs: HueristicNavigationStack = None
+        self.occupancy_map: np.ndarray = None
     
     def initialize(self, env_pixel, global_pose) -> None:
         '''

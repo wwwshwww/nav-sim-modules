@@ -1,7 +1,8 @@
 from typing import Tuple
 import numpy as np
-from ...nav_components.mapping import Mapper
-from ...nav_components.planning import Planner
+from nav_sim_modules.nav_components.mapping import Mapper
+from nav_sim_modules.nav_components.planning import Planner
+from ...utils import con2pix, pix2con
 
 from ... import MAP_UNK_VAL, MAP_OBS_VAL, MAP_PASS_VAL, PASSABLE_COLOR, RESOLUTION
 
@@ -48,19 +49,13 @@ class HueristicNavigationStack():
         '''
         連続値座標系をピクセル座標系に変換する関数
         ''' 
-        pos_x = round(continuous_pos[0] // self.resolution + self.pix_center_x)
-        pos_y = round(continuous_pos[1] // self.resolution + self.pix_center_y)
-
-        return (pos_x, pos_y, continuous_pos[2])
+        return con2pix(continuous_pos, [self.pix_center_x,self.pix_center_y], self.resolution)
 
     def pix2con(self, pixel_pos) -> tuple:
         '''
         ピクセル座標系を連続値座標系に変換する関数
         ''' 
-        pos_x = (pixel_pos[0] - self.pix_center_x) * self.resolution
-        pos_y = (pixel_pos[1] - self.pix_center_y) * self.resolution
-
-        return (pos_x, pos_y, pixel_pos[2])
+        return pix2con(pixel_pos, [self.pix_center_x, self.pix_center_y], self.resolution)
 
     def goto(self, goal) -> Tuple:
         pix_goal = self.con2pix(goal)

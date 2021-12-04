@@ -1,9 +1,9 @@
-from typing import Tuple
-from numpy.typing import ArrayLike
+from typing import Tuple, Sequence
 
 import numpy as np
 from decimal import Decimal, ROUND_HALF_UP
 
+from . import PASSABLE_COLOR, RESOLUTION
 
 def rgb2int(rgb: Tuple[int,int,int]) -> int:
     '''
@@ -35,3 +35,21 @@ def convert_360(rad180):
     [-180,180] -> [0,360]
     '''
     return rad180 % (np.pi*2)
+
+def con2pix(continuous_pos: Sequence, pix_center, resolution=RESOLUTION) -> tuple:
+    '''
+    Convert continuous pose to pixel pose
+    ''' 
+    pos_1 = round(continuous_pos[0] // resolution + pix_center[0])
+    pos_2 = round(continuous_pos[1] // resolution + pix_center[1])
+
+    return (pos_1, pos_2, *continuous_pos[2:])
+
+def pix2con(pixel_pos: Sequence, pix_center, resolution=RESOLUTION) -> tuple:
+    '''
+    Convert pixel pose to continuous pose
+    ''' 
+    pos_1 = (pixel_pos[0] - pix_center[0]) * resolution
+    pos_2 = (pixel_pos[1] - pix_center[1]) * resolution
+
+    return (pos_1, pos_2, *pixel_pos[2:])

@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 import pygame
 
@@ -7,8 +6,8 @@ import matplotlib.pyplot as plt
 import pygame.draw
 from pygame.pixelarray import PixelArray
 
-from cy_module.mapping_cy import Mapper
-from tool import utils
+from nav_sim_modules import Mapper
+from nav_sim_modules import utils
 
 def main():
     width = 512
