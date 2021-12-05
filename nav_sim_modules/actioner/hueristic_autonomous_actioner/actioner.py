@@ -3,11 +3,26 @@ import numpy as np
 from ..actioner import Actioner
 from .autonomous import HueristicNavigationStack
 
-from ... import RESOLUTION, MAP_UNK_VAL, MAP_PASS_VAL, MAP_OBS_VAL
+from ... import RESOLUTION
 
 class HeuristicLocalAutonomousActioner(Actioner):
-    def __init__(self, resolution=RESOLUTION) -> None:
+    def __init__(
+        self, 
+        path_exploration_count: int=5,
+        allowable_angle: float=np.pi/8,
+        allowable_norm: float=0.5,
+        avoidance_size: int=1,
+        path_planning_count: float=25000, 
+        resolution=RESOLUTION
+    ) -> None:
+
         super().__init__(resolution)
+        self.path_exploration_count = path_exploration_count
+        self.allowable_angle = allowable_angle
+        self.allowable_norm = allowable_norm
+        self.avoidance_size = avoidance_size
+        self.path_planning_count = path_planning_count
+
         self.navs: HueristicNavigationStack = None
         self.occupancy_map: np.ndarray = None
     
@@ -16,7 +31,15 @@ class HeuristicLocalAutonomousActioner(Actioner):
         env_pixel should be transformed image.
         '''
         super().initialize(env_pixel, global_pose)
-        self.navs = HueristicNavigationStack(self.env_pixel, (self.local_pose_x,self.local_pose_y,self.local_pose_yaw))
+        self.navs = HueristicNavigationStack(
+            self.env_pixel, 
+            (self.local_pose_x,self.local_pose_y,self.local_pose_yaw),
+            self.path_planning_count,
+            self.allowable_angle,
+            self.allowable_norm,
+            self.avoidance_size,
+            self.path_planning_count
+        )
         self.occupancy_map = self.navs.mapper.occupancy_map
 
     def do_action(self, action) -> None:
@@ -31,9 +54,23 @@ class HeuristicLocalAutonomousActioner(Actioner):
         return (self.local_pose_x, self.local_pose_y, self.local_pose_yaw)
 
 class HeuristicAutonomousActioner(Actioner):
-    def __init__(self, resolution=RESOLUTION) -> None:
-        super().__init__()
-        self.resolution = resolution
+    def __init__(
+        self, 
+        path_exploration_count: int=5,
+        allowable_angle: float=np.pi/8,
+        allowable_norm: float=0.5,
+        avoidance_size: int=1,
+        path_planning_count: float=25000, 
+        resolution=RESOLUTION
+    ) -> None:
+
+        super().__init__(resolution)
+        self.path_exploration_count = path_exploration_count
+        self.allowable_angle = allowable_angle
+        self.allowable_norm = allowable_norm
+        self.avoidance_size = avoidance_size
+        self.path_planning_count = path_planning_count
+
         self.navs: HueristicNavigationStack = None
         self.occupancy_map: np.ndarray = None
     
@@ -42,7 +79,15 @@ class HeuristicAutonomousActioner(Actioner):
         env_pixel should use image that using same frame as global_pose's.
         '''
         super().initialize(env_pixel, global_pose)
-        self.navs = HueristicNavigationStack(self.env_pixel, (self.global_pose_x,self.global_pose_y,self.global_pose_yaw))
+        self.navs = HueristicNavigationStack(
+            self.env_pixel, 
+            (self.global_pose_x,self.global_pose_y,self.global_pose_yaw),
+            self.path_planning_count,
+            self.allowable_angle,
+            self.allowable_norm,
+            self.avoidance_size,
+            self.path_planning_count
+        )
         self.occupancy_map = self.navs.mapper.occupancy_map
 
     def do_action(self, action) -> None:

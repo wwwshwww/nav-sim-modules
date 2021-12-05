@@ -11,16 +11,26 @@ class HueristicNavigationStack():
     map_obs_val = MAP_OBS_VAL# 地図の障害物の色
     map_pass_val = MAP_PASS_VAL # 地図における移動可能
     map_unk_val = MAP_UNK_VAL #地図における未知の領域
-
-    path_exploration_count = 10 # 許容最大試行回数
-    allowable_angle = np.pi/8
-    allowable_norm = 1
-    avoidance_size = 1 # ロボットの体の大きさ、どこまでの障害物を避けるか
-    path_planning_count = 30000 
     
-    def __init__(self, env_pixel: np.ndarray, pose: Tuple, resolution: float=RESOLUTION) -> None:
+    def __init__(
+        self, 
+        env_pixel: np.ndarray, 
+        initial_pose: Tuple, 
+        path_exploration_count: int,
+        allowable_angle: float,
+        allowable_norm: float,
+        avoidance_size: int,
+        path_planning_count: float, 
+        resolution: float=RESOLUTION
+    ) -> None:
+
         self.env_pixel = env_pixel
-        self.pose = pose # continuous 
+        self.pose = initial_pose # continuous 
+        self.path_exploration_count = path_exploration_count
+        self.allowable_angle = allowable_angle
+        self.allowable_norm = allowable_norm
+        self.avoidance_size = avoidance_size
+        self.path_planning_count = path_planning_count
         self.resolution = resolution
 
         self.pix_center_x = len(self.env_pixel) // 2
@@ -80,7 +90,7 @@ class HueristicNavigationStack():
             
             path_mask = np.full_like(self.mapper.occupancy_map, False, dtype=np.bool8)
             for p in path:
-                if self.mapper.occupancy_map[p[0], p[1]] == self.map_unk_val:
+                if self.mapper.occupancy_map[p[0],p[1]] == self.map_unk_val:
                     path_mask[p[0], p[1]] = True
 
             ops_flag = False

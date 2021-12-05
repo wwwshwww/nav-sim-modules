@@ -2,25 +2,26 @@ from ..scener import Scener
 from trimesh.path.polygons import sample
 from randoor.generator import ChestSearchRoomGenerator, ChestSearchRoomConfig
 import numpy as np
+from shapely.geometry import Polygon
 
 from typing import Tuple
 
-from ... import PASSABLE_COLOR, MAP_OBS_VAL, MAP_PASS_VAL, RESOLUTION, ENV_SIZE
+from ... import SPAWN_EXTENSION, PASSABLE_COLOR, MAP_OBS_VAL, MAP_PASS_VAL, RESOLUTION, ENV_SIZE
 
 class ChestSearchRoomScener(Scener):
     passable_color = PASSABLE_COLOR #移動可能の色　この色以外は障害物とみなす
     map_obs_val = MAP_OBS_VAL # 地図の障害物の色
     map_pass_val = MAP_PASS_VAL # 地図における移動可能
-    sample_grace = 0.3
 
-    def __init__(self, env_size=ENV_SIZE, resolution=RESOLUTION) -> None:
+    def __init__(self, spawn_extension: float=SPAWN_EXTENSION, env_size: int=ENV_SIZE, resolution: float=RESOLUTION) -> None:
         ## 直近の情報 ##
-        self.room_config = None
-        self.env_pixel = None
-        self.sample_area = None
-        self.freespace_area = None
-        self.components_info = {'obstacle': [], 'key': [], 'chest': []}
+        self.room_config: ChestSearchRoomConfig = None
+        self.env_pixel: np.ndarray = None
+        self.sample_area: Polygon = None
+        self.freespace_area: Polygon = None
+        self.components_info: dict = {'obstacle': [], 'key': [], 'chest': []}
         ##############
+        self.spawn_extension = spawn_extension
         self.env_size = env_size
         self.resolution = resolution
         self.generator_list = []
@@ -96,7 +97,7 @@ class ChestSearchRoomScener(Scener):
             room_wall_thickness=room_wall_thickness, 
             wall_threshold=wall_threshold
         )
-        self.sample_area = self.room_config.get_freezone_poly().buffer(-self.sample_grace)
+        self.sample_area = self.room_config.get_freezone_poly().buffer(-self.spawn_extension)
         self.freespace_area = self.room_config.get_freespace_poly()
         self.env_pixel = self._pixelize()
         self.components_info['obstacle'] = self.room_config.get_positions(self.room_config.tag_obstacle)
