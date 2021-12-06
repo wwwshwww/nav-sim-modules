@@ -34,7 +34,7 @@ class HeuristicLocalAutonomousActioner(Actioner):
         self.navs = HueristicNavigationStack(
             self.env_pixel, 
             (self.local_pose_x,self.local_pose_y,self.local_pose_yaw),
-            self.path_planning_count,
+            self.path_exploration_count,
             self.allowable_angle,
             self.allowable_norm,
             self.avoidance_size,
@@ -89,7 +89,7 @@ class HeuristicAutonomousActioner(Actioner):
         self.navs = HueristicNavigationStack(
             self.env_pixel, 
             (self.global_pose_x,self.global_pose_y,self.global_pose_yaw),
-            self.path_planning_count,
+            self.path_exploration_count,
             self.allowable_angle,
             self.allowable_norm,
             self.avoidance_size,

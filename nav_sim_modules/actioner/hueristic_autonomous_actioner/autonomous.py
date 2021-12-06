@@ -23,7 +23,7 @@ class HueristicNavigationStack():
         allowable_angle: float,
         allowable_norm: float,
         avoidance_size: int,
-        path_planning_count: float, 
+        path_planning_count: int, 
         resolution: float=RESOLUTION
     ) -> None:
 
