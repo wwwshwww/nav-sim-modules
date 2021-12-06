@@ -44,7 +44,7 @@ def main():
     mono[mono==-1] = 50
     plt.imsave('occupancy_map.png', mono, cmap='gray')
     
-    print(nav.goto((2.0, 2.0, 0)))
+    print(nav.goto_visualize((2.0, 2.0, 0)))
     print("done")
 
     # pygame.draw.circle(screen, (255,255,255), pos[:2], 10)
