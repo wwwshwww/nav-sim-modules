@@ -1,10 +1,13 @@
 from typing import Tuple
 import numpy as np
-from nav_sim_modules.nav_components.mapping import Mapper
-from nav_sim_modules.nav_components.planning import Planner
+#from nav_sim_modules.nav_components.mapping import Mapper
+#from nav_sim_modules.nav_components.planning import Planner
+from nav_components.mapping import Mapper
+from nav_components.planning import Planner
 from ...utils import con2pix, pix2con
 
 from ... import MAP_UNK_VAL, MAP_OBS_VAL, MAP_PASS_VAL, PASSABLE_COLOR, RESOLUTION
+from PIL import Image
 
 class HueristicNavigationStack():
     passable_color = PASSABLE_COLOR #移動可能の色　この色以外は障害物とみなす
@@ -109,3 +112,91 @@ class HueristicNavigationStack():
             count +=1
             
         return self.pose
+
+    def goto_visualize(self, goal, output_filename) -> Tuple:
+        pixlize_start = self.con2pix((self.pose[0], self.pose[1]))
+        pix_goal = self.con2pix(goal)
+        pixlize_start_coler = (255, 0, 0)
+        pixlize_goal_coler = (0, 0, 255)
+        pixlize_path_coler = (0, 255, 0)
+        pixlize_current_coler = (255, 0, 255)
+        pixlize_trajectoly_coler = (255, 255, 0)
+        pixlize_pics = []
+        pixlize_trajectoly = [pixlize_start]
+        pixlize_trajectoly_mask = np.full_like(self.mapper.occupancy_map, False, dtype=np.bool8)
+        pixlize_trajectoly_mask[pixlize_start[0], pixlize_start[1]] = True
+        
+        print(f'start: {self.con2pix(self.pose)}, goal: {pix_goal}')
+        self.mapper.set_agent_pos(self.con2pix(self.pose)[:2])
+        self.mapper.scan()
+        count = 1
+        while True:
+            pixlize_map = np.copy(self.mapper.occupancy_map)
+            pixlize_pic = np.empty((*self.mapper.occupancy_map.shape,3), dtype=np.uint8)
+            pixlize_pic[:,:,0] = pixlize_map
+            pixlize_pic[:,:,1] = pixlize_map
+            pixlize_pic[:,:,2] = pixlize_map
+
+            if count > self.path_exploration_count:
+                break
+
+            if  (np.linalg.norm(np.array(goal[:2])-self.pose[:2]) <= self.allowable_norm) and\
+                ((np.abs(self.pose[2] - goal[2]) <= self.allowable_angle) or\
+                (np.abs(self.pose[2] - goal[2]) >= (np.pi*2 - self.allowable_angle))):
+                    break
+
+            self.planner.occupancy_map = self.mapper.occupancy_map
+            path = self.planner.get_path(
+                start_pos=self.con2pix(self.pose), 
+                goal_pos=pix_goal
+            )
+
+            path_mask = np.full_like(self.mapper.occupancy_map, False, dtype=np.bool8)
+            full_path_mask = np.full_like(self.mapper.occupancy_map, False, dtype=np.bool8)
+
+            for p in path:
+                full_path_mask[p[0],p[1]] = True
+                
+                if self.mapper.occupancy_map[p[0],p[1]] == self.map_unk_val:
+                    path_mask[p[0], p[1]] = True
+            pixlize_pic[full_path_mask] = pixlize_path_coler
+            pixlize_pic[pixlize_trajectoly_mask] = pixlize_trajectoly_coler
+            pixlize_pic[pixlize_start[0], pixlize_start[1]] = pixlize_start_coler
+            pixlize_pic[pix_goal[0], pix_goal[1]] = pixlize_goal_coler
+            pixlize_pics.append(pixlize_pic)
+
+            ops_flag = False
+            for i in range(len(path)):
+                self.pose = self.pix2con(path[i])
+                self.mapper.set_agent_pos(path[i][:2])
+                self.mapper.scan()
+
+                pixlize_trajectoly.append(path)
+                pixlize_trajectoly_mask[path[i][0],path[i][1]] = True
+
+                pixlize_pic = np.empty((*self.mapper.occupancy_map.shape,3), dtype=np.uint8)
+                pixlize_pic[:,:,0] = self.mapper.occupancy_map
+                pixlize_pic[:,:,1] = self.mapper.occupancy_map
+                pixlize_pic[:,:,2] = self.mapper.occupancy_map
+                pixlize_pic[full_path_mask] = pixlize_path_coler
+                pixlize_pic[pixlize_trajectoly_mask] = pixlize_trajectoly_coler 
+                pixlize_pic[pixlize_start[0], pixlize_start[1]] = pixlize_start_coler
+                pixlize_pic[pix_goal[0], pix_goal[1]] = pixlize_goal_coler
+                pixlize_pic[path[i][0],path[i][1]] = pixlize_current_coler
+                pixlize_pics.append(pixlize_pic)
+
+                if self.map_obs_val in self.mapper.occupancy_map[path_mask]:
+                    ops_flag = True
+                    break
+
+            if ops_flag:
+                self.pose = (self.pose[0], self.pose[1], self.planner.angle_approx[self.pose[2]])
+            else:
+                self.pose = (self.pose[0], self.pose[1], goal[2])
+            count +=1
+        create_gif(pixlize_pics, output_filename)    
+        return self.pose
+
+def create_gif(frames: list, filename: str="output"):
+    frs = [Image.fromarray(f, mode="RGB") for f in frames]
+    frs[0].save(f'{filename}.gif', save_all=True, append_images=frs[1:], optimize=False, duration=40, loop=0)
