@@ -92,11 +92,11 @@ cdef class Planner():
         return angle
 
     cdef double cost_move(self, int current_x, int current_y, int current_ang, int target_x, int target_y, int target_ang):
-        cdef double cost = 2.0
+        cdef double cost = 1.0
         if (self.occupancy_map[current_x, current_y] == self.path_color) and (self.occupancy_map[target_x, target_y] == self.unk_color):
             cost += 1.0
         if self.obs_color in range_slice(self.occupancy_map, target_x, target_y, self.avoidance_size):
-            cost += 3.0
+            cost += 4.0
         # if (current_x != target_x) and (current_y != target_y):
         #     cost += 0.2
         if current_ang != target_ang:

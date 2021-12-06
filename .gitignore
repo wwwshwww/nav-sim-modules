@@ -5,3 +5,4 @@ dist
 *.so
 *.lock
 *.cpp
+*.egg-info

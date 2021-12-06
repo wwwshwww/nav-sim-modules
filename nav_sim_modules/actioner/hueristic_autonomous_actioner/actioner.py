@@ -49,7 +49,7 @@ class HeuristicLocalAutonomousActioner(Actioner):
         self.local_pose_y = reached_pose[1]
         self.local_pose_yaw = reached_pose[2]
 
-    def do_action_visualize(self, action, filename) -> None:
+    def do_action_visualize(self, action, filename='move') -> None:
         reached_pose = self.navs.goto_visualize(action, filename) # should be pose of the global frame
         self.occupancy_map = self.navs.mapper.occupancy_map
         self.global_pose_x = reached_pose[0]
@@ -104,7 +104,7 @@ class HeuristicAutonomousActioner(Actioner):
         self.global_pose_y = reached_pose[1]
         self.global_pose_yaw = reached_pose[2]
 
-    def do_action_visualize(self, action, filename) -> None:
+    def do_action_visualize(self, action, filename='move') -> None:
         reached_pose = self.navs.goto_visualize(action, filename) # should be pose of the global frame
         self.occupancy_map = self.navs.mapper.occupancy_map
         self.global_pose_x = reached_pose[0]
