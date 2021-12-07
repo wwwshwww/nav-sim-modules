@@ -40,8 +40,8 @@ def con2pix(continuous_pos: Sequence, pix_center, resolution=RESOLUTION) -> tupl
     '''
     Convert continuous pose to pixel pose
     ''' 
-    pos_1 = round(continuous_pos[0] // resolution + pix_center[0])
-    pos_2 = round(continuous_pos[1] // resolution + pix_center[1])
+    pos_1 = round(continuous_pos[0] / resolution + pix_center[0])
+    pos_2 = round(continuous_pos[1] / resolution + pix_center[1])
 
     return (pos_1, pos_2, *continuous_pos[2:])
 

@@ -76,20 +76,19 @@ class HueristicNavigationStack():
         ops_flag = False
         while count <= self.path_exploration_count:
             if  (np.linalg.norm(np.array(goal[:2])-self.pose[:2]) <= self.allowable_norm) and\
-                ((np.abs(self.pose[2] - goal[2]) <= self.allowable_angle) or\
-                (np.abs(self.pose[2] - goal[2]) >= (np.pi*2 - self.allowable_angle))):
+                ((np.abs(self.pose[2] - goal[2]) <= self.allowable_angle/2) or\
+                (np.abs(self.pose[2] - goal[2]) >= (np.pi*2 - self.allowable_angle/2))):
                     break
 
             path = np.array(self.planner.get_path(start_pos=self.con2pix(self.pose), goal_pos=pix_goal))
             
             if len(path) > 0:
                 path_mask = create_path_mask(self.mapper.occupancy_map, path, self.avoidance_size, self.map_unk_val)
-            
-            print(len(path))
 
             replan_flag = False
+            current = self.pose
             for i in range(len(path)):
-                self.pose = self.pix2con(path[i])
+                current = self.pix2con(path[i])
                 self.mapper.set_agent_pos(tuple(path[i][:2]))
                 self.mapper.scan()
                 if self.mapper.occupancy_map[pix_goal[0],pix_goal[1]] == self.map_obs_val:
@@ -100,12 +99,12 @@ class HueristicNavigationStack():
                     break
 
             if ops_flag:
-                self.pose = (self.pose[0], self.pose[1], self.planner.angle_approx[self.pose[2]])
+                self.pose = (current[0], current[1], self.planner.angle_approx[current[2]])
                 break
             elif replan_flag:
-                self.pose = (self.pose[0], self.pose[1], self.planner.angle_approx[self.pose[2]])
+                self.pose = (current[0], current[1], self.planner.angle_approx[current[2]])
             else:
-                self.pose = (self.pose[0], self.pose[1], goal[2])
+                self.pose = (current[0], current[1], goal[2])
 
             count +=1            
         return self.pose
@@ -146,8 +145,9 @@ class HueristicNavigationStack():
                 full_path_mask[path[:,0],path[:,1]] = True
 
             replan_flag = False
+            current = self.pose
             for i in range(len(path)):
-                self.pose = self.pix2con(path[i])
+                current = self.pix2con(path[i])
                 self.mapper.set_agent_pos(tuple(path[i][:2]))
                 self.mapper.scan()
 
@@ -177,12 +177,12 @@ class HueristicNavigationStack():
                     break
 
             if ops_flag:
-                self.pose = (self.pose[0], self.pose[1], self.planner.angle_approx[self.pose[2]])
+                self.pose = (current[0], current[1], self.planner.angle_approx[current[2]])
                 break
             elif replan_flag:
-                self.pose = (self.pose[0], self.pose[1], self.planner.angle_approx[self.pose[2]])
+                self.pose = (current[0], current[1], self.planner.angle_approx[current[2]])
             else:
-                self.pose = (self.pose[0], self.pose[1], goal[2])
+                self.pose = (current[0], current[1], goal[2])
             count +=1
 
         if len(pixlize_pics) > 0:
