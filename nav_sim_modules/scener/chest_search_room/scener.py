@@ -4,7 +4,7 @@ from randoor.generator import ChestSearchRoomGenerator, ChestSearchRoomConfig
 import numpy as np
 from shapely.geometry import Polygon
 
-from typing import Tuple
+from typing import List, Tuple
 
 from ... import SPAWN_EXTENSION, PASSABLE_COLOR, MAP_OBS_VAL, MAP_PASS_VAL, RESOLUTION, ENV_SIZE
 
@@ -25,12 +25,12 @@ class ChestSearchRoomScener(Scener):
         self.env_size = env_size
         self.resolution = resolution
         self.generator_list = []
-        self.parameter_list = []
+        self.parameter_set = []
 
-    def _generate_room(self, **kwargs) -> ChestSearchRoomConfig: 
-        params = tuple(v for v in kwargs.values())
+    def _generate_room(self, *args) -> ChestSearchRoomConfig: 
+        params = tuple(v for v in args)
         if params in self.parameter_list:
-            generator = self.generator_list(self.parameter_list.index(params))
+            generator = self.generator_list[self.parameter_list.index(params)]
         else:
             generator = ChestSearchRoomGenerator(*params)
             self.generator_list.append(generator)
@@ -86,16 +86,16 @@ class ChestSearchRoomScener(Scener):
                         wall_threshold=0.1) -> None:
 
         self.room_config = self._generate_room(
-            obstacle_count=obstacle_count, 
-            obstacle_size=obstacle_size, 
-            target_size=target_size, 
-            key_size=key_size, 
-            obstacle_zone_thresh=obstacle_zone_thresh,
-            distance_key_placing=distance_key_placing, 
-            range_key_placing=range_key_placing,
-            room_length_max=room_length_max, 
-            room_wall_thickness=room_wall_thickness, 
-            wall_threshold=wall_threshold
+            obstacle_count, 
+            obstacle_size, 
+            target_size, 
+            key_size, 
+            obstacle_zone_thresh,
+            distance_key_placing, 
+            range_key_placing,
+            room_length_max, 
+            room_wall_thickness, 
+            wall_threshold
         )
         self.sample_area = self.room_config.get_freezone_poly().buffer(-self.spawn_extension)
         self.freespace_area = self.room_config.get_freespace_poly()
