@@ -25,7 +25,7 @@ class ChestSearchRoomScener(Scener):
         self.env_size = env_size
         self.resolution = resolution
         self.generator_list = []
-        self.parameter_set = []
+        self.parameter_list = []
 
     def _generate_room(self, *args) -> ChestSearchRoomConfig: 
         params = tuple(v for v in args)
