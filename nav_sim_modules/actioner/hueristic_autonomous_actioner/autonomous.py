@@ -18,10 +18,10 @@ class HueristicNavigationStack():
         env_pixel: np.ndarray, 
         initial_pose: Tuple, 
         path_exploration_count: int,
+        path_planning_count: int, 
         allowable_angle: float,
         allowable_norm: float,
         avoidance_size: int,
-        path_planning_count: int, 
         resolution: float=RESOLUTION
     ) -> None:
 
@@ -53,7 +53,7 @@ class HueristicNavigationStack():
             obs_color=self.map_obs_val,
             unk_color=self.map_unk_val,
             avoidance_size= self.avoidance_size,
-            exp_max=self.path_planning_count
+            exp_max=self.path_exploration_count
         )
 
     def con2pix(self, continuous_pos) -> tuple:
@@ -74,7 +74,7 @@ class HueristicNavigationStack():
         self.mapper.scan()
         count = 1
         ops_flag = False
-        while count <= self.path_exploration_count:
+        while count <= self.path_planning_count:
             if  (np.linalg.norm(np.array(goal[:2])-self.pose[:2]) <= self.allowable_norm) and\
                 ((np.abs(self.pose[2] - goal[2]) <= self.allowable_angle/2) or\
                 (np.abs(self.pose[2] - goal[2]) >= (np.pi*2 - self.allowable_angle/2))):
@@ -129,7 +129,7 @@ class HueristicNavigationStack():
         self.mapper.scan()
         count = 1
         ops_flag = False
-        while count <= self.path_exploration_count:
+        while count <= self.path_planning_count:
             if  (np.linalg.norm(np.array(goal[:2])-self.pose[:2]) <= self.allowable_norm) and\
                 ((np.abs(self.pose[2] - goal[2]) <= self.allowable_angle) or\
                 (np.abs(self.pose[2] - goal[2]) >= (np.pi*2 - self.allowable_angle))):

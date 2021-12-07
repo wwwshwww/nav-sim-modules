@@ -8,11 +8,11 @@ from ... import RESOLUTION
 class HeuristicLocalAutonomousActioner(Actioner):
     def __init__(
         self, 
-        path_exploration_count: int=5,
+        path_exploration_count: int=20000,
+        path_planning_count: float=10, 
         allowable_angle: float=np.pi/8,
         allowable_norm: float=0.5,
         avoidance_size: int=1,
-        path_planning_count: float=25000, 
         resolution=RESOLUTION
     ) -> None:
 
@@ -35,10 +35,10 @@ class HeuristicLocalAutonomousActioner(Actioner):
             self.env_pixel, 
             (self.local_pose_x,self.local_pose_y,self.local_pose_yaw),
             self.path_exploration_count,
+            self.path_planning_count,
             self.allowable_angle,
             self.allowable_norm,
-            self.avoidance_size,
-            self.path_planning_count
+            self.avoidance_size
         )
         self.occupancy_map = self.navs.mapper.occupancy_map
 
@@ -63,11 +63,11 @@ class HeuristicLocalAutonomousActioner(Actioner):
 class HeuristicAutonomousActioner(Actioner):
     def __init__(
         self, 
-        path_exploration_count: int=5,
+        path_exploration_count: int=20000,
+        path_planning_count: float=10, 
         allowable_angle: float=np.pi/8,
         allowable_norm: float=0.5,
         avoidance_size: int=1,
-        path_planning_count: float=25000, 
         resolution=RESOLUTION
     ) -> None:
 
@@ -90,10 +90,10 @@ class HeuristicAutonomousActioner(Actioner):
             self.env_pixel, 
             (self.global_pose_x,self.global_pose_y,self.global_pose_yaw),
             self.path_exploration_count,
+            self.path_planning_count,
             self.allowable_angle,
             self.allowable_norm,
-            self.avoidance_size,
-            self.path_planning_count
+            self.avoidance_size
         )
         self.occupancy_map = self.navs.mapper.occupancy_map
 
