@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nav-sim-modules"
-version = "0.2.13"
+version = "0.2.14"
 description = "Components for software to simulate the environment of robot that use autonomous movement system such as ROS Navigation Stack."
 homepage = "https://github.com/wwwshwww/nav-sim-modules"
 authors = ["Reona Sato <www.shinderu.www@gmail.com>"]
@@ -12,12 +12,13 @@ randoor = "^0.1.4.4"
 numpy = "^1.20"
 cython = "^0.29.24"
 Pillow = "^8.4.0"
+numba = "^0.54.1"
 
 [tool.poetry.dev-dependencies]
 jupyter = "^1.0.0"
 matplotlib = "^3.5.0"
 descartes = "^1.1.0"
-numba = "^0.54.1"
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "setuptools", "cython", "numpy"]

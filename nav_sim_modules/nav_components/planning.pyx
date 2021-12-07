@@ -21,12 +21,18 @@ cdef double convert_180(double rad360):
     '''
     return ((rad360 - np.pi) % (np.pi*2)) - np.pi
 
+cdef np.ndarray[np.int64_t] create_circum_mask(int r):
+    cdef np.ndarray[np.int64_t, ndim=2] x, y
+    x, y = np.meshgrid(np.arange(-r,r+1), np.arange(-r,r+1))
+    cdef np.ndarray[np.uint8_t, ndim=2] mask = np.linalg.norm([x, y], axis=0) <= r
+    return np.array([x[mask], y[mask]])
+
 cdef np.ndarray range_slice(np.ndarray img, int x, int y, int length=1):
     cdef int top, left, down, right
     top = max(0, x-length)
     left = max(0, y-length)
-    down = max(len(img)-1, x+length)
-    right = max(len(img[0])-1, x+length)
+    down = max(len(img), x+length+1)
+    right = max(len(img[0]), x+length+1)
     return img[top:down, left:right]
 
 cdef class Planner():
@@ -34,7 +40,7 @@ cdef class Planner():
     cdef public int NEIGHBOR_RANGE
     cdef public np.ndarray NEIGHBOR_MASK, ANGLE_CRITERION
 
-    cdef public np.ndarray occupancy_map, local_criterion
+    cdef public np.ndarray occupancy_map, local_criterion, circum_mask
     cdef public double turnable
     cdef public int path_color, obs_color, unk_color, avoidance_size, height, width, angle_num, exp_max
     cdef public vector[int] angles,
@@ -76,6 +82,7 @@ cdef class Planner():
         self.angle_thresh = [convert_180(turnable*p - turnable/2) for p in range(self.angle_num+1)]
         self.angle_approx = [convert_180(turnable*p) for p in range(self.angle_num)]
         self.local_criterion = np.array([self.get_angle(a) for a in self.ANGLE_CRITERION])
+        self.circum_mask = create_circum_mask(self.avoidance_size)
 
     cdef int get_angle(self, double rad):
         cdef int i, angle
@@ -91,16 +98,20 @@ cdef class Planner():
                     break
         return angle
 
+    cpdef int get_angle_py(self, double rad):
+        return self.get_angle(rad)
+
     cdef double cost_move(self, int current_x, int current_y, int current_ang, int target_x, int target_y, int target_ang):
-        cdef double cost = 1.0
-        if (self.occupancy_map[current_x, current_y] == self.path_color) and (self.occupancy_map[target_x, target_y] == self.unk_color):
-            cost += 1.0
-        if self.obs_color in range_slice(self.occupancy_map, target_x, target_y, self.avoidance_size):
-            cost += 4.0
+        cdef double cost = 2.0
+        # if (self.occupancy_map[current_x, current_y] == self.path_color) and (self.occupancy_map[target_x, target_y] == self.unk_color):
+        #     cost += 1.0
+        # if self.obs_color in range_slice(self.occupancy_map, target_x, target_y, self.avoidance_size):
+        #     cost += 8.0
         # if (current_x != target_x) and (current_y != target_y):
         #     cost += 0.2
-        if current_ang != target_ang:
-            cost += 0.2
+        # if current_ang != target_ang:
+        #     cost += 0.2
+        # cost += 0.2 * (abs(current_ang - target_ang) % (self.angle_num-1))
         return cost
 
     cdef double cost_h(self, int current_x, int current_y, int current_ang, int target_x, int target_y, int target_ang):
@@ -115,17 +126,21 @@ cdef class Planner():
         cdef np.ndarray[np.int64_t, ndim=2] mask = self.NEIGHBOR_MASK
         cdef np.ndarray[np.int64_t, ndim=1] lc = self.local_criterion
 
+        cdef int angle_diff
+
         for i in range(len(neighbors)):
             neighbors[i,0] += mask[i,0]
             neighbors[i,1] += mask[i,1]
             neighbors[i,2] = (neighbors[i,2] + mask[i,2]) % self.angle_num
 
+            angle_diff = abs(lc[i]-ang)
+
             ####### filtering ##########
-            if ((abs(lc[i]-ang) <= 1) or (abs(lc[i]-ang) >= self.angle_num-1)) and \
+            if ((angle_diff <= 1) or (angle_diff >= self.angle_num-1)) and \
                 ((neighbors[i,0] != x) or (neighbors[i,1] != y)) and \
                 ((0 <= neighbors[i,0] < self.height) and \
                 (0 <= neighbors[i,1] < self.width)) and \
-                (occupancy[neighbors[i,0], neighbors[i,1]] != self.obs_color):
+                (not (self.obs_color in occupancy[self.circum_mask[0]+neighbors[i,0], self.circum_mask[1]+neighbors[i,1]])):
 
                 result[i] = True
         
@@ -147,8 +162,11 @@ cdef class Planner():
         goal = (round(goal_pos[0]), round(goal_pos[1]), self.get_angle(goal_pos[2]))
         start = (round(start_pos[0]), round(start_pos[1]), self.get_angle(start_pos[2]))
 
+        if self.obs_color in self.occupancy_map[self.circum_mask[0]+goal[0], self.circum_mask[1]+goal[1]]:
+            return []
+
         score = self.cost_h(start[0], start[1], start[2], goal[0], goal[1], goal[2])
-        found = True
+        found = False
         heapq.heappush(open_list, (score, start))
 
         cdef tuple n
@@ -156,16 +174,14 @@ cdef class Planner():
         cdef np.ndarray[np.int32_t, ndim=2] neighbors
 
         c = 0
-        while True:
-            if (len(open_list) == 0) or (c == self.exp_max):
-                found = False
-                break
+        while (len(open_list) != 0) and (c != self.exp_max):
 
             n = heapq.heappop(open_list)
             node = n[1]
             if close[node[0], node[1], node[2]]:
                 continue
             if (node[0] == goal[0]) and (node[1] == goal[1]) and (node[2] == goal[2]):
+                found = True
                 break
             else:
                 close[node[0], node[1], node[2]] = True
