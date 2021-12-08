@@ -91,16 +91,12 @@ class HueristicNavigationStack():
             replan_flag = False
             current = self.pose
             for i in range(len(path)):
-                if (footprint >= self.move_limit) and (self.move_limit != -1):
-                    ops_flag = True
-                    break
-
                 current = self.pix2con(path[i])
                 self.mapper.set_agent_pos(tuple(path[i][:2]))
                 self.mapper.scan()
                 footprint += 1
                 
-                if self.mapper.occupancy_map[pix_goal[0],pix_goal[1]] == self.map_obs_val:
+                if ((footprint >= self.move_limit) and (self.move_limit != -1)) or (self.mapper.occupancy_map[pix_goal[0],pix_goal[1]] == self.map_obs_val):
                     ops_flag = True
                     break
                 if self.map_obs_val in self.mapper.occupancy_map[path_mask]:
@@ -158,10 +154,6 @@ class HueristicNavigationStack():
             replan_flag = False
             current = self.pose
             for i in range(len(path)):
-                if (footprint >= self.move_limit) and (self.move_limit != -1):
-                    ops_flag = True
-                    break
-
                 current = self.pix2con(path[i])
                 self.mapper.set_agent_pos(tuple(path[i][:2]))
                 self.mapper.scan()
@@ -185,7 +177,7 @@ class HueristicNavigationStack():
                 pixlize_pic[x,y] = pixlize_angle_color
                 pixlize_pics.append(pixlize_pic)
 
-                if self.mapper.occupancy_map[pix_goal[0],pix_goal[1]] == self.map_obs_val:
+                if ((footprint >= self.move_limit) and (self.move_limit != -1)) or (self.mapper.occupancy_map[pix_goal[0],pix_goal[1]] == self.map_obs_val):
                     ops_flag = True
                     break
                 if self.map_obs_val in self.mapper.occupancy_map[path_mask]:
