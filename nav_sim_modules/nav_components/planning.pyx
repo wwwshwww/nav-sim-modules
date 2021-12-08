@@ -76,6 +76,8 @@ cdef class Planner():
 
         self.height = self.occupancy_map.shape[0]
         self.width = self.occupancy_map.shape[1]
+        self.end_row = self.height - self.avoidance_size
+        self.end_col = self.width - self.avoidance_size
         # self.cost_map = np.empty_like(self.occupancy_map)
         self.angle_num = int(np.pi*2 // self.turnable)
         self.angles = list(range(self.angle_num))
@@ -126,6 +128,7 @@ cdef class Planner():
         cdef np.ndarray[np.int64_t, ndim=2] occupancy = self.occupancy_map
         cdef np.ndarray[np.int64_t, ndim=2] mask = self.NEIGHBOR_MASK
         cdef np.ndarray[np.int64_t, ndim=1] lc = self.local_criterion
+        cdef np.ndarray[np.int64_t, ndim=2] circum
 
         for i in range(len(neighbors)):
             neighbors[i,0] += mask[i,0]
@@ -137,11 +140,11 @@ cdef class Planner():
             ####### filtering ##########
             if ((angle_diff <= 1) or (angle_diff >= self.angle_num-1)) and \
                 ((neighbors[i,0] != x) or (neighbors[i,1] != y)) and \
-                ((0 <= neighbors[i,0] < self.height) and \
-                (0 <= neighbors[i,1] < self.width)) and \
-                (not (self.obs_color in occupancy[self.circum_mask[0]+neighbors[i,0], self.circum_mask[1]+neighbors[i,1]])):
+                ((self.avoidance_size <= neighbors[i,0] < self.end_row) and \
+                (self.avoidance_size <= neighbors[i,1] < self.end_col)):
 
-                result[i] = True
+                if not (self.obs_color in occupancy[self.circum_mask[0]+neighbors[i,0], self.circum_mask[1]+neighbors[i,1]]):
+                    result[i] = True
         
         return neighbors[result]
 
