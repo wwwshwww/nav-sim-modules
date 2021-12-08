@@ -111,8 +111,12 @@ cdef class Planner():
         #     cost += 8.0
         # if (current_x != target_x) and (current_y != target_y):
         #     cost += 0.2
-        if current_ang != target_ang:
-            cost += 0.1
+
+        ### make like be DWB Planner ####
+        # if current_ang != target_ang:
+        #     cost += 0.1
+        #################################
+        
         # cost += 0.2 * (abs(current_ang - target_ang) % (self.angle_num-1))
         return cost
 
