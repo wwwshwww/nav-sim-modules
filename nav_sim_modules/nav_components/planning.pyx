@@ -42,7 +42,7 @@ cdef class Planner():
 
     cdef public np.ndarray occupancy_map, local_criterion, circum_mask
     cdef public double turnable
-    cdef public int path_color, obs_color, unk_color, avoidance_size, height, width, angle_num, exp_max
+    cdef public int path_color, obs_color, unk_color, avoidance_size, height, width, angle_num, exp_max, end_row, end_col
     cdef public vector[int] angles,
     cdef public vector[double] angle_thresh, angle_approx
 
