@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Tuple, List
 
 from ..utils import con2pix, pix2con
@@ -29,6 +30,7 @@ class Actioner():
         self.global_pose_y = global_pose[1]
         self.global_pose_yaw = global_pose[2]
 
+    @abstractmethod
     def do_action(self, action: any) -> None:
         pass
 

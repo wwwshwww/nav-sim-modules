@@ -13,6 +13,7 @@ class HeuristicLocalAutonomousActioner(Actioner):
         allowable_angle: float=np.pi/8,
         allowable_norm: float=0.5,
         avoidance_size: int=1,
+        move_limit: int=-1,
         resolution=RESOLUTION
     ) -> None:
 
@@ -22,6 +23,7 @@ class HeuristicLocalAutonomousActioner(Actioner):
         self.allowable_norm = allowable_norm
         self.avoidance_size = avoidance_size
         self.path_planning_count = path_planning_count
+        self.move_limit = move_limit
 
         self.navs: HueristicNavigationStack = None
         self.occupancy_map: np.ndarray = None
@@ -38,7 +40,9 @@ class HeuristicLocalAutonomousActioner(Actioner):
             self.path_planning_count,
             self.allowable_angle,
             self.allowable_norm,
-            self.avoidance_size
+            self.avoidance_size,
+            self.move_limit,
+            self.resolution
         )
         self.occupancy_map = self.navs.mapper.occupancy_map
 
@@ -68,6 +72,7 @@ class HeuristicAutonomousActioner(Actioner):
         allowable_angle: float=np.pi/8,
         allowable_norm: float=0.5,
         avoidance_size: int=1,
+        move_limit: int=-1,
         resolution=RESOLUTION
     ) -> None:
 
@@ -77,6 +82,7 @@ class HeuristicAutonomousActioner(Actioner):
         self.allowable_norm = allowable_norm
         self.avoidance_size = avoidance_size
         self.path_planning_count = path_planning_count
+        self.move_limit = move_limit
 
         self.navs: HueristicNavigationStack = None
         self.occupancy_map: np.ndarray = None
@@ -93,7 +99,9 @@ class HeuristicAutonomousActioner(Actioner):
             self.path_planning_count,
             self.allowable_angle,
             self.allowable_norm,
-            self.avoidance_size
+            self.avoidance_size,
+            self.move_limit,
+            self.resolution
         )
         self.occupancy_map = self.navs.mapper.occupancy_map
 

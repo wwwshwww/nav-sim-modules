@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nav-sim-modules"
-version = "0.2.20"
+version = "0.2.21"
 description = "Components for software to simulate the environment of robot that use autonomous movement system such as ROS Navigation Stack."
 homepage = "https://github.com/wwwshwww/nav-sim-modules"
 authors = ["Reona Sato <www.shinderu.www@gmail.com>"]
