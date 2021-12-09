@@ -52,26 +52,27 @@ class ChestSearchRoomScener(Scener):
         '''
         Return the initial agent pose and truth occupancy map.
         '''
-        xy = sample(self.sample_area, 1)[0]
+        xy = []
+        while len(xy) == 0:
+            xy = sample(self.sample_area, 1)
         yaw = (np.random.rand()*2-1)*np.pi
-        return (xy[0], xy[1], yaw)
+        return (xy[0][0], xy[0][1], yaw)
 
     def spawn_with_map(self) -> Tuple[Tuple[float,float,float], np.ndarray]:
         '''
         Return the initial agent pose.
         '''
-        xy = sample(self.sample_area, 1)[0]
-        yaw = (np.random.rand()*2-1)*np.pi
+        pose = self.spawn()
         occ_map = self.room_config.get_occupancy_grid(
             space_poly=self.freespace_area, 
-            origin_pos=tuple(xy),
-            origin_ori=yaw,
+            origin_pos=tuple(pose[:2]),
+            origin_ori=pose[2],
             resolution=self.resolution, 
             map_size=self.env_size, 
             pass_color=self.map_pass_val, 
             obs_color=self.map_obs_val,
         ).astype(np.int32)
-        return (xy[0], xy[1], yaw), occ_map.reshape([self.env_size, self.env_size]).T
+        return pose, occ_map.reshape([self.env_size, self.env_size]).T
 
     def generate_scene(self, 
                         obstacle_count=10,
