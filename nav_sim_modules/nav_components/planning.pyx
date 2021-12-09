@@ -12,6 +12,7 @@ ctypedef pair[double, vector[int]] PAIR
 
 cdef np.ndarray create_neighbor_mask(int length=1):
     mesh_range = np.arange(-length, length+1)
+    # mesh_range = mesh_range[np.argsort(np.abs(mesh_range))]
     xx, yy, aa = np.meshgrid(mesh_range, mesh_range, mesh_range)
     return np.vstack((xx.flatten(),yy.flatten(),aa.flatten())).T
 
@@ -39,6 +40,7 @@ cdef class Planner():
 
     cdef public int NEIGHBOR_RANGE
     cdef public np.ndarray NEIGHBOR_MASK, ANGLE_CRITERION
+    cdef public double MOVE_COST, TURN_COST
 
     cdef public np.ndarray occupancy_map, local_criterion, circum_mask
     cdef public double turnable
@@ -86,6 +88,9 @@ cdef class Planner():
         self.local_criterion = np.array([self.get_angle(a) for a in self.ANGLE_CRITERION])
         self.circum_mask = create_circum_mask(self.avoidance_size)
 
+        self.MOVE_COST = 2.0
+        self.TURN_COST = self.MOVE_COST / self.angle_num
+
     cdef int get_angle(self, double rad):
         cdef int i, angle
         angle = -1
@@ -104,6 +109,7 @@ cdef class Planner():
         return self.get_angle(rad)
 
     cdef double cost_move(self, int current_x, int current_y, int current_ang, int target_x, int target_y, int target_ang):
+        # cdef double cost = self.MOVE_COST
         cdef double cost = 2.0
         # if (self.occupancy_map[current_x, current_y] == self.path_color) and (self.occupancy_map[target_x, target_y] == self.unk_color):
         #     cost += 1.0
@@ -114,7 +120,7 @@ cdef class Planner():
 
         ### make like be DWB Planner ####
         # if current_ang != target_ang:
-        #     cost += 0.1
+        #     cost += self.TURN_COST
         #################################
         
         # cost += 0.2 * (abs(current_ang - target_ang) % (self.angle_num-1))

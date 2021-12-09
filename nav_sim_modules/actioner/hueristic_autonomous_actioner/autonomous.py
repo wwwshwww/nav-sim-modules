@@ -37,6 +37,8 @@ class HueristicNavigationStack():
         self.move_limit = move_limit
         self.resolution = resolution
 
+        self.circum_mask = create_circum_mask(self.avoidance_size)
+
         self.pix_center_x = len(self.env_pixel) // 2
         self.pix_center_y = len(self.env_pixel[0]) // 2
 
@@ -72,48 +74,51 @@ class HueristicNavigationStack():
         return pix2con(pixel_pos, [self.pix_center_x, self.pix_center_y], self.resolution)
 
     def goto(self, goal) -> Tuple:
+        pixlize_start = self.con2pix((self.pose[0], self.pose[1]))
         pix_goal = self.con2pix(goal)
         self.mapper.set_agent_pos(self.con2pix(self.pose)[:2])
         self.mapper.scan()
-        planning_count = 1
+        planning_count = 0
         footprint = 0
         ops_flag = False
-        while planning_count <= self.path_planning_count:
+        while planning_count < self.path_planning_count:
             if  (np.linalg.norm(np.array(goal[:2])-self.pose[:2]) <= self.allowable_norm) and\
-                ((abs(self.pose[2] - goal[2]) <= self.allowable_angle/2) or\
-                (abs(self.pose[2] - goal[2]) >= (np.pi*2 - self.allowable_angle/2))):
+                ((abs(self.pose[2] - goal[2]) <= self.allowable_angle) or\
+                (abs(self.pose[2] - goal[2]) >= (np.pi*2 - self.allowable_angle))):
                     break
-
+            
             path = np.array(self.planner.get_path(start_pos=self.con2pix(self.pose), goal_pos=pix_goal))
             
-            if len(path) > 0:
-                path_mask = create_path_mask(self.mapper.occupancy_map, path, self.avoidance_size, self.map_unk_val)
+            if len(path) == 0:
+                break
+            else:
+                path_mask = create_path_mask_with_circle(self.mapper.occupancy_map, path, self.circum_mask, self.map_unk_val)
 
-            replan_flag = False
-            current = self.pose
-            for i in range(len(path)):
-                current = self.pix2con(path[i])
-                self.mapper.set_agent_pos(tuple(path[i][:2]))
-                self.mapper.scan()
-                footprint += 1
-                
-                if ((footprint >= self.move_limit) and (self.move_limit != -1)) or (self.mapper.occupancy_map[pix_goal[0],pix_goal[1]] == self.map_obs_val):
-                    ops_flag = True
+                replan_flag = False
+                current = self.pose
+                for i in range(len(path)):
+                    current = self.pix2con(path[i])
+                    self.mapper.set_agent_pos(tuple(path[i][:2]))
+                    self.mapper.scan()
+                    footprint += 1
+
+                    if ((footprint >= self.move_limit) and (self.move_limit != -1)) or (self.mapper.occupancy_map[pix_goal[0],pix_goal[1]] == self.map_obs_val):
+                        ops_flag = True
+                        break
+                    if self.map_obs_val in self.mapper.occupancy_map[path_mask]:
+                        replan_flag = True
+                        break
+
+                if ops_flag:
+                    self.pose = (current[0], current[1], self.planner.angle_approx[current[2]])
                     break
-                if self.map_obs_val in self.mapper.occupancy_map[path_mask]:
-                    replan_flag = True
-                    break
+                elif replan_flag:
+                    self.pose = (current[0], current[1], self.planner.angle_approx[current[2]])
+                else:
+                    self.pose = (current[0], current[1], goal[2])
 
             planning_count +=1
 
-            if ops_flag:
-                self.pose = (current[0], current[1], self.planner.angle_approx[current[2]])
-                break
-            elif replan_flag:
-                self.pose = (current[0], current[1], self.planner.angle_approx[current[2]])
-            else:
-                self.pose = (current[0], current[1], goal[2])
-                   
         return self.pose
 
     def goto_visualize(self, goal, output_filename) -> Tuple:
@@ -135,73 +140,82 @@ class HueristicNavigationStack():
         start = time.time()
         self.mapper.set_agent_pos(self.con2pix(self.pose)[:2])
         self.mapper.scan()
-        planning_count = 1
+        planning_count = 0
         footprint = 0
         ops_flag = False
-        while planning_count <= self.path_planning_count:
+        while planning_count < self.path_planning_count:
             if  (np.linalg.norm(np.array(goal[:2])-self.pose[:2]) <= self.allowable_norm) and\
                 ((abs(self.pose[2] - goal[2]) <= self.allowable_angle) or\
                 (abs(self.pose[2] - goal[2]) >= (np.pi*2 - self.allowable_angle))):
+                    print('reached!')
                     break
             
-            # self.planner.occupancy_map = self.mapper.occupancy_map
+            print(f'plan: {planning_count+1}')
             path = np.array(self.planner.get_path(start_pos=self.con2pix(self.pose), goal_pos=pix_goal))
             
-            if len(path) > 0:
-                # path_mask[path[:,0],path[:,1]] = self.mapper.occupancy_map[path[:,0],path[:,1]] == self.map_unk_val
-                path_mask = create_path_mask(self.mapper.occupancy_map, path, self.avoidance_size, self.map_unk_val)
+            if len(path) == 0:
+                print('path not found...')
+                break
+            else:
+                path_mask = create_path_mask_with_circle(self.mapper.occupancy_map, path, self.circum_mask, self.map_unk_val)
                 full_path_mask = np.full_like(self.mapper.occupancy_map, False, dtype=np.bool8)
                 full_path_mask[path[:,0],path[:,1]] = True
 
-            replan_flag = False
-            current = self.pose
-            for i in range(len(path)):
-                current = self.pix2con(path[i])
-                self.mapper.set_agent_pos(tuple(path[i][:2]))
-                self.mapper.scan()
-                footprint += 1
+                replan_flag = False
+                current = self.pose
+                for i in range(len(path)):
+                    current = self.pix2con(path[i])
+                    self.mapper.set_agent_pos(tuple(path[i][:2]))
+                    self.mapper.scan()
+                    footprint += 1
 
-                pixlize_trajectoly.append(path)
-                pixlize_trajectoly_mask[path[i][0],path[i][1]] = True
+                    pixlize_trajectoly.append(path)
+                    pixlize_trajectoly_mask[path[i][0],path[i][1]] = True
 
-                pixlize_pic = np.empty((*self.mapper.occupancy_map.shape,3), dtype=np.uint8)
-                pixlize_pic[:,:,0] = self.planner.occupancy_map
-                pixlize_pic[:,:,1] = self.planner.occupancy_map
-                pixlize_pic[:,:,2] = self.planner.occupancy_map
-                pixlize_pic[full_path_mask] = pixlize_path_coler
-                pixlize_pic[pixlize_trajectoly_mask] = pixlize_trajectoly_coler 
-                pixlize_pic[pixlize_start[0], pixlize_start[1]] = pixlize_start_coler
-                pixlize_pic[pix_goal[0], pix_goal[1]] = pixlize_goal_coler
-                pixlize_pic[path[i][0],path[i][1]] = pixlize_current_coler
-                ang = self.planner.angle_approx[path[i][2]]
-                x = round(path[i][0]+np.cos(ang)*pixlize_angle_len)
-                y = round(path[i][1]+np.sin(ang)*pixlize_angle_len)
-                pixlize_pic[x,y] = pixlize_angle_color
-                pixlize_pics.append(pixlize_pic)
+                    pixlize_pic = np.empty((*self.mapper.occupancy_map.shape,3), dtype=np.uint8)
+                    pixlize_pic[:,:,0] = self.mapper.occupancy_map
+                    pixlize_pic[:,:,1] = self.mapper.occupancy_map
+                    pixlize_pic[:,:,2] = self.mapper.occupancy_map
+                    pixlize_pic[full_path_mask] = pixlize_path_coler
+                    pixlize_pic[pixlize_trajectoly_mask] = pixlize_trajectoly_coler 
+                    pixlize_pic[pixlize_start[0], pixlize_start[1]] = pixlize_start_coler
+                    pixlize_pic[pix_goal[0], pix_goal[1]] = pixlize_goal_coler
+                    pixlize_pic[path[i][0],path[i][1]] = pixlize_current_coler
+                    ang = self.planner.angle_approx[path[i][2]]
+                    x = round(path[i][0]+np.cos(ang)*pixlize_angle_len)
+                    y = round(path[i][1]+np.sin(ang)*pixlize_angle_len)
+                    pixlize_pic[x,y] = pixlize_angle_color
+                    pixlize_pics.append(pixlize_pic)
 
-                if ((footprint >= self.move_limit) and (self.move_limit != -1)) or (self.mapper.occupancy_map[pix_goal[0],pix_goal[1]] == self.map_obs_val):
-                    ops_flag = True
+                    # print(np.sum(self.mapper.occupancy_map[path_mask]))
+                    if ((footprint >= self.move_limit) and (self.move_limit != -1)) or (self.mapper.occupancy_map[pix_goal[0],pix_goal[1]] == self.map_obs_val):
+                        ops_flag = True
+                        print('ops...')
+                        break
+                    if self.map_obs_val in self.mapper.occupancy_map[path_mask]:
+                        replan_flag = True
+                        break                
+
+                if ops_flag:
+                    self.pose = (current[0], current[1], self.planner.angle_approx[current[2]])
                     break
-                if self.map_obs_val in self.mapper.occupancy_map[path_mask]:
-                    replan_flag = True
-                    break
+                elif replan_flag:
+                    self.pose = (current[0], current[1], self.planner.angle_approx[current[2]])
+                else:
+                    self.pose = (current[0], current[1], goal[2])
 
             planning_count +=1
 
-            if ops_flag:
-                self.pose = (current[0], current[1], self.planner.angle_approx[current[2]])
-                break
-            elif replan_flag:
-                self.pose = (current[0], current[1], self.planner.angle_approx[current[2]])
-            else:
-                self.pose = (current[0], current[1], goal[2])
-
         print(f'Time: {time.time()-start}')
-
         if len(pixlize_pics) > 1:
             create_gif(pixlize_pics, output_filename)    
         
         return self.pose
+
+def create_circum_mask(r: int):
+    x, y = np.meshgrid(np.arange(-r,r+1), np.arange(-r,r+1))
+    mask = np.linalg.norm([x, y], axis=0) <= r
+    return np.array([x[mask], y[mask]])
 
 from numba import njit, b1, i8, prange
 
@@ -216,6 +230,18 @@ def create_path_mask(occupancy_map: np.ndarray, path_xy: np.ndarray, avoidance: 
         left = max(0, path_xy[i][1]-avoidance)
         right = min(col, path_xy[i][1]+avoidance+1)
         output_mask[top:bottom, left:right] = occupancy_map[top:bottom, left:right] == map_unk_color
+    return output_mask
+
+@njit(b1[:,:](i8[:,:], i8[:,:], i8[:,:], i8))
+def create_path_mask_with_circle(occupancy_map: np.ndarray, path_xy: np.ndarray, circum: np.ndarray, map_unk_color: int):
+    output_mask = np.zeros_like(occupancy_map, dtype=np.bool8)
+    l = len(circum[0])
+    for i in prange(len(path_xy)):
+        x = circum[0]+path_xy[i][0]
+        y = circum[1]+path_xy[i][1]
+        for j in prange(l):
+            if occupancy_map[x[j]][y[j]] == map_unk_color:
+                output_mask[x[j]][y[j]] = 1
     return output_mask
 
 
