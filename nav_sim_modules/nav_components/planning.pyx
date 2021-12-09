@@ -132,7 +132,7 @@ cdef class Planner():
         cdef np.ndarray[np.int64_t, ndim=2] occupancy = self.occupancy_map
         cdef np.ndarray[np.int64_t, ndim=2] mask = self.NEIGHBOR_MASK
         cdef np.ndarray[np.int64_t, ndim=1] lc = self.local_criterion
-        cdef np.ndarray[np.int64_t, ndim=2] circum
+        cdef np.ndarray[np.int64_t, ndim=2] circum = self.circum_mask
 
         for i in range(len(neighbors)):
             neighbors[i,0] += mask[i,0]
@@ -147,7 +147,7 @@ cdef class Planner():
                 ((self.avoidance_size <= neighbors[i,0] < self.end_row) and \
                 (self.avoidance_size <= neighbors[i,1] < self.end_col)):
 
-                if not (self.obs_color in occupancy[self.circum_mask[0]+neighbors[i,0], self.circum_mask[1]+neighbors[i,1]]):
+                if not (self.obs_color in occupancy[circum[0]+neighbors[i,0], circum[1]+neighbors[i,1]]):
                     result[i] = True
         
         return neighbors[result]

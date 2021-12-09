@@ -2,6 +2,7 @@ from typing import Tuple
 import numpy as np
 from nav_sim_modules.nav_components.mapping import Mapper
 from nav_sim_modules.nav_components.planning import Planner
+import time
 from ...utils import con2pix, pix2con
 
 from ... import MAP_UNK_VAL, MAP_OBS_VAL, MAP_PASS_VAL, PASSABLE_COLOR, RESOLUTION
@@ -79,8 +80,8 @@ class HueristicNavigationStack():
         ops_flag = False
         while planning_count <= self.path_planning_count:
             if  (np.linalg.norm(np.array(goal[:2])-self.pose[:2]) <= self.allowable_norm) and\
-                ((np.abs(self.pose[2] - goal[2]) <= self.allowable_angle/2) or\
-                (np.abs(self.pose[2] - goal[2]) >= (np.pi*2 - self.allowable_angle/2))):
+                ((abs(self.pose[2] - goal[2]) <= self.allowable_angle/2) or\
+                (abs(self.pose[2] - goal[2]) >= (np.pi*2 - self.allowable_angle/2))):
                     break
 
             path = np.array(self.planner.get_path(start_pos=self.con2pix(self.pose), goal_pos=pix_goal))
@@ -131,6 +132,7 @@ class HueristicNavigationStack():
         pixlize_trajectoly_mask[pixlize_start[0], pixlize_start[1]] = True
         
         print(f'Navigation started: {self.con2pix(self.pose)} to {pix_goal}')
+        start = time.time()
         self.mapper.set_agent_pos(self.con2pix(self.pose)[:2])
         self.mapper.scan()
         planning_count = 1
@@ -138,8 +140,8 @@ class HueristicNavigationStack():
         ops_flag = False
         while planning_count <= self.path_planning_count:
             if  (np.linalg.norm(np.array(goal[:2])-self.pose[:2]) <= self.allowable_norm) and\
-                ((np.abs(self.pose[2] - goal[2]) <= self.allowable_angle) or\
-                (np.abs(self.pose[2] - goal[2]) >= (np.pi*2 - self.allowable_angle))):
+                ((abs(self.pose[2] - goal[2]) <= self.allowable_angle) or\
+                (abs(self.pose[2] - goal[2]) >= (np.pi*2 - self.allowable_angle))):
                     break
             
             # self.planner.occupancy_map = self.mapper.occupancy_map
@@ -194,9 +196,11 @@ class HueristicNavigationStack():
             else:
                 self.pose = (current[0], current[1], goal[2])
 
+        print(f'Time: {time.time()-start}')
+
         if len(pixlize_pics) > 1:
             create_gif(pixlize_pics, output_filename)    
-
+        
         return self.pose
 
 from numba import njit, b1, i8, prange
@@ -207,10 +211,10 @@ def create_path_mask(occupancy_map: np.ndarray, path_xy: np.ndarray, avoidance: 
     col = len(occupancy_map[0])
     output_mask = np.zeros_like(occupancy_map, dtype=np.bool8)
     for i in prange(len(path_xy)):
-        top = np.max(np.array([0, path_xy[i][0]-avoidance]))
-        bottom = np.min(np.array([row, path_xy[i][0]+avoidance+1]))
-        left = np.max(np.array([0, path_xy[i][1]-avoidance]))
-        right = np.min(np.array([col, path_xy[i][1]+avoidance+1]))
+        top = max(0, path_xy[i][0]-avoidance)
+        bottom = min(row, path_xy[i][0]+avoidance+1)
+        left = max(0, path_xy[i][1]-avoidance)
+        right = min(col, path_xy[i][1]+avoidance+1)
         output_mask[top:bottom, left:right] = occupancy_map[top:bottom, left:right] == map_unk_color
     return output_mask
 

@@ -34,6 +34,8 @@ else:
                 language='c++',
                 compiler_directives={'linetrace': True},
             ),
+            # 'extra_compile_args': ['-fopenmp'],
+            # 'extra_link_args': ['-fopenmp'],
             'cmdclass': {'build_ext': build_ext},
             'include_dirs': np.get_include()
         })

@@ -6,7 +6,7 @@ cimport cython
 cdef class Mapper():
 
     cdef public np.ndarray surface, occupancy_map
-    cdef public int agent_x, agent_y
+    cdef public int agent_x, agent_y, size
     cdef public int passable_color, map_obs_val, map_pass_val, map_unk_val
 
     def __init__(
@@ -20,6 +20,7 @@ cdef class Mapper():
     ):
 
         self.surface = np.asarray(surface)
+        self.size = len(self.surface)
         self.agent_x = round(agent_initial_pos[0])
         self.agent_y = round(agent_initial_pos[1])
         self.passable_color = passable_color
@@ -42,18 +43,16 @@ cdef class Mapper():
 
     cpdef void scan(self):
         cdef int i, l
-        l = len(self.occupancy_map)-1
-        for i in range(len(self.occupancy_map)):
+        l = self.size-1
+        for i in range(self.size):
             self.ray(self.agent_x, self.agent_y, 0, i)
             self.ray(self.agent_x, self.agent_y, l, i)
             self.ray(self.agent_x, self.agent_y, i, 0)
             self.ray(self.agent_x, self.agent_y, i, l)
 
     cdef void ray(self, int base_x, int base_y, int target_x, int target_y):
-        cdef int x, y, dx, dy, sx, sy, err, row, col
+        cdef int x, y, dx, dy, sx, sy, err
         cdef np.ndarray[np.int64_t, ndim=2] buf = self.occupancy_map
-        row = len(self.surface)
-        col = len(self.surface[0])
 
         x = base_x
         y = base_y
@@ -66,7 +65,7 @@ cdef class Mapper():
         err = dx - dy
 
         while True:
-            if (x >= row) or (x < 0) or (y >= col) or (y < 0): 
+            if (x >= self.size) or (x < 0) or (y >= self.size) or (y < 0): 
                 break
             if buf[x,y] == self.map_unk_val:
                 if self.surface[x,y] == self.passable_color:
