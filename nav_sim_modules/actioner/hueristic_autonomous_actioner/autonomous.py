@@ -74,7 +74,6 @@ class HueristicNavigationStack():
         return pix2con(pixel_pos, [self.pix_center_x, self.pix_center_y], self.resolution)
 
     def goto(self, goal) -> Tuple:
-        pixlize_start = self.con2pix((self.pose[0], self.pose[1]))
         pix_goal = self.con2pix(goal)
         self.mapper.set_agent_pos(self.con2pix(self.pose)[:2])
         self.mapper.scan()
@@ -92,7 +91,7 @@ class HueristicNavigationStack():
             if len(path) == 0:
                 break
             else:
-                path_mask = create_path_mask_with_circle(self.mapper.occupancy_map, path, self.circum_mask, self.map_unk_val)
+                path_mask = create_path_mask_with_mask(self.mapper.occupancy_map, path, self.circum_mask, self.map_unk_val)
 
                 replan_flag = False
                 current = self.pose
@@ -157,7 +156,7 @@ class HueristicNavigationStack():
                 print('path not found...')
                 break
             else:
-                path_mask = create_path_mask_with_circle(self.mapper.occupancy_map, path, self.circum_mask, self.map_unk_val)
+                path_mask = create_path_mask_with_mask(self.mapper.occupancy_map, path, self.circum_mask, self.map_unk_val)
                 full_path_mask = np.full_like(self.mapper.occupancy_map, False, dtype=np.bool8)
                 full_path_mask[path[:,0],path[:,1]] = True
 
@@ -233,12 +232,12 @@ def create_path_mask(occupancy_map: np.ndarray, path_xy: np.ndarray, avoidance: 
     return output_mask
 
 @njit(b1[:,:](i8[:,:], i8[:,:], i8[:,:], i8))
-def create_path_mask_with_circle(occupancy_map: np.ndarray, path_xy: np.ndarray, circum: np.ndarray, map_unk_color: int):
+def create_path_mask_with_mask(occupancy_map: np.ndarray, path_xy: np.ndarray, mask: np.ndarray, map_unk_color: int):
     output_mask = np.zeros_like(occupancy_map, dtype=np.bool8)
-    l = len(circum[0])
+    l = len(mask[0])
     for i in prange(len(path_xy)):
-        x = circum[0]+path_xy[i][0]
-        y = circum[1]+path_xy[i][1]
+        x = mask[0]+path_xy[i][0]
+        y = mask[1]+path_xy[i][1]
         for j in prange(l):
             if occupancy_map[x[j]][y[j]] == map_unk_color:
                 output_mask[x[j]][y[j]] = 1

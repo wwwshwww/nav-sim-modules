@@ -28,13 +28,12 @@ class ChestSearchRoomScener(Scener):
         self.parameter_list = []
 
     def _generate_room(self, *args) -> ChestSearchRoomConfig: 
-        params = tuple(v for v in args)
-        if params in self.parameter_list:
-            generator = self.generator_list[self.parameter_list.index(params)]
+        if args in self.parameter_list:
+            generator = self.generator_list[self.parameter_list.index(args)]
         else:
-            generator = ChestSearchRoomGenerator(*params)
+            generator = ChestSearchRoomGenerator(*args)
             self.generator_list.append(generator)
-            self.parameter_list.append(params)
+            self.parameter_list.append(args)
 
         return generator.generate_new()
 
