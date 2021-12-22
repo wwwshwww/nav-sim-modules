@@ -46,10 +46,8 @@ class HeuristicLocalAutonomousActioner(Actioner):
         )
         self.occupancy_map = self.navs.mapper.occupancy_map
 
-    def register_occupancy_map(self, occupancy_map: np.array) -> None:
-        self.navs.mapper.occupancy_map = occupancy_map
-        self.navs.planner.occupancy_map = occupancy_map
-        self.occupancy_map = occupancy_map
+    def register_env_pixel(self, env_pixel: np.array) -> None:
+        self.navs.mapper.surface = env_pixel
 
     def do_action(self, action) -> None:
         reached_pose = self.navs.goto(action) # should be pose of the local frame
@@ -110,10 +108,8 @@ class HeuristicAutonomousActioner(Actioner):
         )
         self.occupancy_map = self.navs.mapper.occupancy_map
 
-    def register_occupancy_map(self, occupancy_map: np.array) -> None:
-        self.navs.mapper.occupancy_map = occupancy_map
-        self.navs.planner.occupancy_map = occupancy_map
-        self.occupancy_map = occupancy_map
+    def register_env_pixel(self, env_pixel: np.array) -> None:
+        self.navs.mapper.surface = env_pixel
 
     def do_action(self, action) -> None:
         reached_pose = self.navs.goto(action) # should be pose of the global frame
