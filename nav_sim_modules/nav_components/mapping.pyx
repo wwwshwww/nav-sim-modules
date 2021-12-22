@@ -11,7 +11,7 @@ cdef class Mapper():
 
     def __init__(
         self, 
-        int[:,:] surface, 
+        np.ndarray[np.int64_t, ndim=2] surface, 
         tuple agent_initial_pos, 
         int passable_color=0, 
         int map_obs_val=100, 
@@ -19,7 +19,7 @@ cdef class Mapper():
         int map_unk_val=-1
     ):
 
-        self.surface = np.asarray(surface)
+        self.surface = surface
         self.size = len(self.surface)
         self.agent_x = round(agent_initial_pos[0])
         self.agent_y = round(agent_initial_pos[1])
@@ -53,6 +53,7 @@ cdef class Mapper():
     cdef void ray(self, int base_x, int base_y, int target_x, int target_y):
         cdef int x, y, dx, dy, sx, sy, err
         cdef np.ndarray[np.int64_t, ndim=2] buf = self.occupancy_map
+        cdef np.ndarray[np.int64_t, ndim=2] surf = self.surface
 
         x = base_x
         y = base_y
@@ -67,13 +68,12 @@ cdef class Mapper():
         while True:
             if (x >= self.size) or (x < 0) or (y >= self.size) or (y < 0): 
                 break
-            if buf[x,y] == self.map_unk_val:
-                if self.surface[x,y] == self.passable_color:
-                    buf[x,y] = self.map_pass_val
-                else:
-                    buf[x,y] = self.map_obs_val
+            if surf[x,y] == self.passable_color:
+                buf[x,y] = self.map_pass_val
+            else:
+                if buf[x,y] == self.map_obs_val:
                     break
-            elif buf[x,y] == self.map_obs_val:
+                buf[x,y] = self.map_obs_val
                 break
             
             e2 = 2 * err

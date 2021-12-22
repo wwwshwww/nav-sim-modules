@@ -50,7 +50,7 @@ cdef class Planner():
 
     def __init__(
         self,
-        np.ndarray occupancy_map,
+        np.ndarray[np.int64_t, ndim=2] occupancy_map,
         double turnable=np.pi/4,
         int path_color=0,
         int obs_color=100,
@@ -59,7 +59,7 @@ cdef class Planner():
         int exp_max=10000
     ):
 
-        self.occupancy_map = np.asarray(occupancy_map)
+        self.occupancy_map = occupancy_map
         self.turnable = turnable
         self.path_color = path_color
         self.obs_color = obs_color

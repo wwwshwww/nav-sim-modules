@@ -14,18 +14,23 @@ class ChestSearchRoomScener(Scener):
     map_pass_val = MAP_PASS_VAL # 地図における移動可能
 
     def __init__(self, spawn_extension: float=SPAWN_EXTENSION, env_size: int=ENV_SIZE, resolution: float=RESOLUTION) -> None:
+
+        self.tag_obstacle = 'obstacle'
+        self.tag_key = 'key'
+        self.tag_chest = 'chest'
+
         ## 直近の情報 ##
         self.room_config: ChestSearchRoomConfig = None
         self.env_pixel: np.ndarray = None
         self.sample_area: Polygon = None
         self.freespace_area: Polygon = None
-        self.components_info: dict = {'obstacle': [], 'key': [], 'chest': []}
+        self.components_info: dict = {self.tag_obstacle: [], self.tag_key: [], self.tag_chest: []}
         ##############
         self.spawn_extension = spawn_extension
         self.env_size = env_size
         self.resolution = resolution
         self.generator_list = []
-        self.parameter_list = []
+        self.parameter_list = []        
 
     def _generate_room(self, *args) -> ChestSearchRoomConfig: 
         if args in self.parameter_list:
@@ -36,16 +41,6 @@ class ChestSearchRoomScener(Scener):
             self.parameter_list.append(args)
 
         return generator.generate_new()
-
-    def _pixelize(self) -> np.ndarray:
-        pix = self.room_config.get_occupancy_grid(
-            space_poly=self.freespace_area, 
-            resolution=self.resolution, 
-            map_size=self.env_size, 
-            pass_color=self.map_pass_val, 
-            obs_color=self.map_obs_val
-        ).astype(np.int32)
-        return pix.reshape([self.env_size, self.env_size]).T
 
     def spawn(self) -> Tuple[float, float, float]:
         '''
@@ -70,7 +65,7 @@ class ChestSearchRoomScener(Scener):
             map_size=self.env_size, 
             pass_color=self.map_pass_val, 
             obs_color=self.map_obs_val,
-        ).astype(np.int32)
+        ).astype(np.int64)
         return pose, occ_map.reshape([self.env_size, self.env_size]).T
 
     def generate_scene(self, 
@@ -97,10 +92,29 @@ class ChestSearchRoomScener(Scener):
             room_wall_thickness, 
             wall_threshold
         )
+
+        self.setup()
+
+        self.components_info[self.tag_obstacle] = self.room_config.get_positions(self.room_config.tag_obstacle)
+        self.components_info[self.tag_key] = self.room_config.get_positions(self.room_config.tag_key)
+        self.components_info[self.tag_chest] = self.room_config.get_positions(self.room_config.tag_target)
+
+    def setup(self) -> None:
         self.sample_area = self.room_config.get_freezone_poly().buffer(-self.spawn_extension)
         self.freespace_area = self.room_config.get_freespace_poly()
-        self.env_pixel = self._pixelize()
-        self.components_info['obstacle'] = self.room_config.get_positions(self.room_config.tag_obstacle)
-        self.components_info['key'] = self.room_config.get_positions(self.room_config.tag_key)
-        self.components_info['chest'] = self.room_config.get_positions(self.room_config.tag_target)
+        self.env_pixel = self.room_config.get_occupancy_grid(
+            space_poly=self.freespace_area, 
+            resolution=self.resolution, 
+            map_size=self.env_size, 
+            pass_color=self.map_pass_val, 
+            obs_color=self.map_obs_val
+        ).astype(np.int64).reshape([self.env_size, self.env_size]).T
 
+    def tweak_key_collision(self, index: int, is_collision: bool) -> None:
+        self.room_config.tweak_key_collision(index, is_collision)
+
+    def tweak_chest_collision(self, index: int, is_collision: bool) -> None:
+        self.room_config.tweak_target_collision(index, is_collision)
+
+    def get_env_pixel(self) -> np.ndarray:
+        return self.env_pixel
