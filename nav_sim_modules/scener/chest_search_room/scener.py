@@ -78,7 +78,9 @@ class ChestSearchRoomScener(Scener):
                         range_key_placing=0.3, 
                         room_length_max=9,
                         room_wall_thickness=0.05, 
-                        wall_threshold=0.1) -> None:
+                        wall_threshold=0.1, 
+                        chest_collision=False,
+                        key_collision=False) -> None:
 
         self.room_config = self._generate_room(
             obstacle_count, 
@@ -93,6 +95,11 @@ class ChestSearchRoomScener(Scener):
             wall_threshold
         )
 
+        if chest_collision:
+            self.tweak_chest_collision_all(True)
+        if key_collision:
+            self.tweak_key_collision_all(True)
+
         self.setup()
 
         self.components_info[self.tag_obstacle] = self.room_config.get_positions(self.room_config.tag_obstacle)
@@ -102,7 +109,10 @@ class ChestSearchRoomScener(Scener):
     def setup(self) -> None:
         self.sample_area = self.room_config.get_freezone_poly().buffer(-self.spawn_extension)
         self.freespace_area = self.room_config.get_freespace_poly()
-        self.env_pixel = self.room_config.get_occupancy_grid(
+        self.env_pixel = self.pixelize()
+
+    def pixelize(self) -> np.array:
+        return self.room_config.get_occupancy_grid(
             space_poly=self.freespace_area, 
             resolution=self.resolution, 
             map_size=self.env_size, 
@@ -116,5 +126,11 @@ class ChestSearchRoomScener(Scener):
     def tweak_chest_collision(self, index: int, is_collision: bool) -> None:
         self.room_config.tweak_target_collision(index, is_collision)
 
-    def get_env_pixel(self) -> np.ndarray:
+    def tweak_key_collision_all(self, is_collision: bool) -> None:
+        self.room_config.set_config_collisions(self.room_config.tag_key, [is_collision for _ in range(self.room_config.key_count)])
+
+    def tweak_chest_collision_all(self, is_collision: bool) -> None:
+        self.room_config.set_config_collisions(self.room_config.tag_target, [is_collision for _ in range(self.room_config.target_count)])
+
+    def get_current_env_pixel(self) -> np.ndarray:
         return self.env_pixel
