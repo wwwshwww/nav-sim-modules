@@ -23,7 +23,6 @@ class ChestSearchRoomScener(Scener):
         self.room_config: ChestSearchRoomConfig = None
         self.env_pixel: np.ndarray = None
         self.sample_area: Polygon = None
-        self.freespace_area: Polygon = None
         self.components_info: dict = {self.tag_obstacle: [], self.tag_key: [], self.tag_chest: []}
         ##############
         self.spawn_extension = spawn_extension
@@ -58,7 +57,7 @@ class ChestSearchRoomScener(Scener):
         '''
         pose = self.spawn()
         occ_map = self.room_config.get_occupancy_grid(
-            space_poly=self.freespace_area, 
+            space_poly=self.room_config.get_freespace_poly(), 
             origin_pos=tuple(pose[:2]),
             origin_ori=pose[2],
             resolution=self.resolution, 
@@ -102,18 +101,16 @@ class ChestSearchRoomScener(Scener):
 
         self.setup()
 
+    def setup(self) -> None:
+        self.sample_area = self.room_config.get_freezone_poly().buffer(-self.spawn_extension)
+        self.env_pixel = self.pixelize()
         self.components_info[self.tag_obstacle] = self.room_config.get_positions(self.room_config.tag_obstacle)
         self.components_info[self.tag_key] = self.room_config.get_positions(self.room_config.tag_key)
         self.components_info[self.tag_chest] = self.room_config.get_positions(self.room_config.tag_target)
 
-    def setup(self) -> None:
-        self.sample_area = self.room_config.get_freezone_poly().buffer(-self.spawn_extension)
-        self.freespace_area = self.room_config.get_freespace_poly()
-        self.env_pixel = self.pixelize()
-
     def pixelize(self) -> np.array:
         return self.room_config.get_occupancy_grid(
-            space_poly=self.freespace_area, 
+            space_poly=self.room_config.get_freespace_poly(),
             resolution=self.resolution, 
             map_size=self.env_size, 
             pass_color=self.map_pass_val, 
