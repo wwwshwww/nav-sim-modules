@@ -9,10 +9,6 @@ from ... import MAP_UNK_VAL, MAP_OBS_VAL, MAP_PASS_VAL, PASSABLE_COLOR, RESOLUTI
 from PIL import Image
 
 class HueristicNavigationStack():
-    passable_color = PASSABLE_COLOR #移動可能の色　この色以外は障害物とみなす
-    map_obs_val = MAP_OBS_VAL# 地図の障害物の色
-    map_pass_val = MAP_PASS_VAL # 地図における移動可能
-    map_unk_val = MAP_UNK_VAL #地図における未知の領域
     
     def __init__(
         self, 
@@ -24,7 +20,11 @@ class HueristicNavigationStack():
         allowable_norm: float,
         avoidance_size: int,
         move_limit: int=-1,
-        resolution: float=RESOLUTION
+        resolution: float=RESOLUTION, 
+        passable_color: int=PASSABLE_COLOR,
+        map_obs_val: int=MAP_OBS_VAL,
+        map_pass_val: int=MAP_PASS_VAL,
+        map_unk_val: int=MAP_UNK_VAL
     ) -> None:
 
         self.env_pixel = env_pixel
@@ -36,6 +36,11 @@ class HueristicNavigationStack():
         self.path_planning_count = path_planning_count
         self.move_limit = move_limit
         self.resolution = resolution
+
+        self.passable_color = passable_color
+        self.map_obs_val = map_obs_val
+        self.map_pass_val = map_pass_val
+        self.map_unk_val = map_unk_val
 
         self.circum_mask = create_circum_mask(self.avoidance_size)
 

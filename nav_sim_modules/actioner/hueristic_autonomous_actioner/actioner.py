@@ -3,7 +3,7 @@ import numpy as np
 from ..actioner import Actioner
 from .autonomous import HueristicNavigationStack
 
-from ... import RESOLUTION
+from ... import MAP_OBS_VAL, MAP_PASS_VAL, MAP_UNK_VAL, PASSABLE_COLOR, RESOLUTION
 
 class HeuristicLocalAutonomousActioner(Actioner):
     def __init__(
@@ -14,7 +14,11 @@ class HeuristicLocalAutonomousActioner(Actioner):
         allowable_norm: float=0.5,
         avoidance_size: int=1,
         move_limit: int=-1,
-        resolution=RESOLUTION
+        resolution: int=RESOLUTION,
+        passable_color: int=PASSABLE_COLOR,
+        map_obs_val: int=MAP_OBS_VAL,
+        map_pass_val: int=MAP_PASS_VAL,
+        map_unk_val: int=MAP_UNK_VAL
     ) -> None:
 
         super().__init__(resolution)
@@ -24,6 +28,11 @@ class HeuristicLocalAutonomousActioner(Actioner):
         self.avoidance_size = avoidance_size
         self.path_planning_count = path_planning_count
         self.move_limit = move_limit
+
+        self.passable_color = passable_color
+        self.map_obs_val = map_obs_val
+        self.map_pass_val = map_pass_val
+        self.map_unk_val = map_unk_val
 
         self.navs: HueristicNavigationStack = None
         self.occupancy_map: np.ndarray = None
@@ -42,7 +51,11 @@ class HeuristicLocalAutonomousActioner(Actioner):
             self.allowable_norm,
             self.avoidance_size,
             self.move_limit,
-            self.resolution
+            self.resolution,
+            self.passable_color,
+            self.map_obs_val,
+            self.map_pass_val,
+            self.map_unk_val
         )
         self.occupancy_map = self.navs.mapper.occupancy_map
 
@@ -76,7 +89,11 @@ class HeuristicAutonomousActioner(Actioner):
         allowable_norm: float=0.5,
         avoidance_size: int=1,
         move_limit: int=-1,
-        resolution=RESOLUTION
+        resolution: int=RESOLUTION,
+        passable_color: int=PASSABLE_COLOR,
+        map_obs_val: int=MAP_OBS_VAL,
+        map_pass_val: int=MAP_PASS_VAL,
+        map_unk_val: int=MAP_UNK_VAL
     ) -> None:
 
         super().__init__(resolution)
@@ -86,6 +103,11 @@ class HeuristicAutonomousActioner(Actioner):
         self.avoidance_size = avoidance_size
         self.path_planning_count = path_planning_count
         self.move_limit = move_limit
+
+        self.passable_color = passable_color
+        self.map_obs_val = map_obs_val
+        self.map_pass_val = map_pass_val
+        self.map_unk_val = map_unk_val
 
         self.navs: HueristicNavigationStack = None
         self.occupancy_map: np.ndarray = None
@@ -104,7 +126,11 @@ class HeuristicAutonomousActioner(Actioner):
             self.allowable_norm,
             self.avoidance_size,
             self.move_limit,
-            self.resolution
+            self.resolution,
+            self.passable_color,
+            self.map_obs_val,
+            self.map_pass_val,
+            self.map_unk_val
         )
         self.occupancy_map = self.navs.mapper.occupancy_map
 

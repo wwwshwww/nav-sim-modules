@@ -8,12 +8,17 @@ from typing import List, Tuple
 
 from ... import SPAWN_EXTENSION, PASSABLE_COLOR, MAP_OBS_VAL, MAP_PASS_VAL, RESOLUTION, ENV_SIZE
 
-class ChestSearchRoomScener(Scener):
-    passable_color = PASSABLE_COLOR #移動可能の色　この色以外は障害物とみなす
-    map_obs_val = MAP_OBS_VAL # 地図の障害物の色
-    map_pass_val = MAP_PASS_VAL # 地図における移動可能
+REGEN_COUNT = 5
 
-    def __init__(self, spawn_extension: float=SPAWN_EXTENSION, env_size: int=ENV_SIZE, resolution: float=RESOLUTION) -> None:
+class ChestSearchRoomScener(Scener):
+
+    def __init__(self, 
+                spawn_extension: float=SPAWN_EXTENSION, 
+                env_size: int=ENV_SIZE, 
+                resolution: float=RESOLUTION, 
+                passable_color: int=PASSABLE_COLOR, 
+                map_obs_val: int=MAP_OBS_VAL,
+                map_pass_val: int=MAP_PASS_VAL) -> None:
 
         self.tag_obstacle = 'obstacle'
         self.tag_key = 'key'
@@ -28,6 +33,9 @@ class ChestSearchRoomScener(Scener):
         self.spawn_extension = spawn_extension
         self.env_size = env_size
         self.resolution = resolution
+        self.passable_color = passable_color
+        self.map_obs_val = map_obs_val
+        self.map_pass_val = map_pass_val
         self.generator_list = []
         self.parameter_list = []        
 
@@ -39,7 +47,17 @@ class ChestSearchRoomScener(Scener):
             self.generator_list.append(generator)
             self.parameter_list.append(args)
 
-        return generator.generate_new()
+        for i in range(REGEN_COUNT):
+            try:
+                room_config = generator.generate_new()
+                break
+            except:
+                pass
+        
+        if i+1 == REGEN_COUNT:
+            raise Exception('Room Generation Error')
+
+        return room_config
 
     def spawn(self) -> Tuple[float, float, float]:
         '''
