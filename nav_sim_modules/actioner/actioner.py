@@ -9,7 +9,7 @@ class Actioner():
         self.action_space = None
         self.observation_space = None
         self.env_pixel = None
-        self.resolution = RESOLUTION
+        self.resolution = resolution
 
         self.pix_center_x = 0
         self.pix_center_y = 0
