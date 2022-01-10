@@ -47,16 +47,7 @@ class ChestSearchRoomScener(Scener):
             self.generator_list.append(generator)
             self.parameter_list.append(args)
 
-        for i in range(REGEN_COUNT):
-            try:
-                room_config = generator.generate_new()
-                break
-            except:
-                pass
-        
-        if i+1 == REGEN_COUNT:
-            raise Exception('Room Generation Error')
-
+        room_config = generator.generate_new()
         return room_config
 
     def spawn(self) -> Tuple[float, float, float]:
@@ -99,25 +90,36 @@ class ChestSearchRoomScener(Scener):
                         chest_collision=False,
                         key_collision=False) -> None:
 
-        self.room_config = self._generate_room(
-            obstacle_count, 
-            obstacle_size, 
-            target_size, 
-            key_size, 
-            obstacle_zone_thresh,
-            distance_key_placing, 
-            range_key_placing,
-            room_length_max, 
-            room_wall_thickness, 
-            wall_threshold
-        )
+        generated = False
+        for _ in range(REGEN_COUNT):
+            try:
+                self.room_config = self._generate_room(
+                    obstacle_count, 
+                    obstacle_size, 
+                    target_size, 
+                    key_size, 
+                    obstacle_zone_thresh,
+                    distance_key_placing, 
+                    range_key_placing,
+                    room_length_max, 
+                    room_wall_thickness, 
+                    wall_threshold
+                )
+                if chest_collision:
+                    self.tweak_chest_collision_all(True)
+                if key_collision:
+                    self.tweak_key_collision_all(True)
+                self.setup()
+                generated = True
+            except:
+                pass
 
-        if chest_collision:
-            self.tweak_chest_collision_all(True)
-        if key_collision:
-            self.tweak_key_collision_all(True)
-
-        self.setup()
+            if generated:
+                break
+        
+        if not generated:
+            raise Exception('Room Generation Error')
+        
 
     def setup(self) -> None:
         self.sample_area = self.room_config.get_freezone_poly().buffer(-self.spawn_extension)
